@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Platform-ComfyUI-orange" alt="Platform">
 </p>
 
-ComfyUI custom nodes for [UniVideo](https://github.com/thu-ml/UniVideo) - A unified multimodal video generation and editing framework powered by HunyuanVideo and Qwen2.5-VL.
+ComfyUI custom nodes for [UniVideo](https://github.com/KlingTeam/UniVideo) - A unified multimodal video generation and editing framework powered by HunyuanVideo and Qwen2.5-VL, developed by Kling Team.
 
 ## ✨ Features
 
@@ -51,7 +51,7 @@ Place in: `ComfyUI/models/HunyuanVideo/`
 
 ### 2. UniVideo Checkpoint
 
-Download from the [UniVideo official repository](https://github.com/thu-ml/UniVideo)
+Download from the [UniVideo official repository](https://github.com/KlingTeam/UniVideo)
 
 | Model | Description |
 |-------|-------------|
@@ -134,7 +134,7 @@ ComfyUI/
 
 ## 🙏 Acknowledgements
 
-- [UniVideo](https://github.com/thu-ml/UniVideo) - The original UniVideo framework
+- [UniVideo](https://github.com/KlingTeam/UniVideo) - The original UniVideo framework by Kling Team
 - [HunyuanVideo](https://github.com/Tencent/HunyuanVideo) - Base video generation model
 - [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) - Multimodal language model
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - The amazing node-based UI
