@@ -2,25 +2,33 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-Apache%202.0-green" alt="License">
-  <img src="https://img.shields.io/badge/Python-3.10+-blue" alt="Python">
+  <img src="https://img.shields.io/badge/Python-3.11-blue" alt="Python">
   <img src="https://img.shields.io/badge/Platform-ComfyUI-orange" alt="Platform">
 </p>
 
-ComfyUI custom nodes for [UniVideo](https://github.com/KlingTeam/UniVideo) - A unified multimodal video generation and editing framework powered by HunyuanVideo and Qwen2.5-VL, developed by Kling Team.
+ComfyUI custom nodes for [UniVideo](https://github.com/KlingTeam/UniVideo) - A unified framework for video understanding, generation, and editing, developed by **Kling Team (Kuaishou Technology)** and **University of Waterloo**.
+
+> **UniVideo** uses HunyuanVideo as the base video generation model and Qwen2.5-VL as the multimodal language model backbone.
+>
+> 📄 Paper: [arXiv:2510.08377](https://arxiv.org/abs/2510.08377) | 🌐 Project Page: [congwei1230.github.io/UniVideo](https://congwei1230.github.io/UniVideo/)
 
 ## ✨ Features
 
+This ComfyUI node currently supports the following UniVideo tasks:
+
 - **Video-to-Video Editing (v2v_edit)**: Apply free-form edits to existing videos based on text instructions
-- **In-Context Video Editing (i+v2v_edit)**: Use reference images to guide video editing (e.g., face swapping)
-- **Integrated with ComfyUI**: Seamless workflow integration with ComfyUI's node-based interface
-- **INT8 Quantization**: Optimized memory usage with INT8 quantization support
+- **In-Context Video Editing (i+v2v_edit)**: Use reference images to guide video editing (e.g., face/identity swapping)
+- **INT8 Quantization**: Optimized memory usage with INT8 quantization via optimum-quanto
+- **Seamless ComfyUI Integration**: Node-based workflow for easy use
+
+> **Note**: The original UniVideo framework supports additional tasks including `understanding`, `multiid`, `t2v`, `t2i`, `i2i_edit`, and `i2v`. These may be added in future updates.
 
 ## 📋 Nodes
 
 | Node Name | Description |
 |-----------|-------------|
-| `RunningHub Univideo Loader` | Loads the UniVideo pipeline including transformer, VAE, scheduler, and MLLM encoder |
-| `RunningHub Univideo Editor` | Performs video editing tasks with optional reference image input |
+| `RunningHub Univideo Loader` | Loads the UniVideo pipeline (Transformer, VAE, Scheduler, MLLM Encoder) |
+| `RunningHub Univideo Editor` | Performs video editing with optional reference image for identity transfer |
 
 ## 🛠️ Installation
 
@@ -51,11 +59,18 @@ Place in: `ComfyUI/models/HunyuanVideo/`
 
 ### 2. UniVideo Checkpoint
 
-Download from the [UniVideo official repository](https://github.com/KlingTeam/UniVideo)
+Download using the official script from [KlingTeam/UniVideo](https://github.com/KlingTeam/UniVideo):
 
-| Model | Description |
-|-------|-------------|
-| `univideo_qwen2p5vl7b_hidden_hunyuanvideo` | Main UniVideo model checkpoint |
+```bash
+python download_ckpt.py
+```
+
+This node uses **Variant 1** (`univideo_qwen2p5vl7b_hidden_hunyuanvideo`):
+> Image, video, and text inputs are processed by the MLLM, and the final hidden states are fed into the MMDiT backbone.
+
+| Model Variant | Description |
+|---------------|-------------|
+| `univideo_qwen2p5vl7b_hidden_hunyuanvideo` | Variant 1: MLLM last layer hidden → MMDiT |
 
 Place in: `ComfyUI/models/UniVideo/univideo_qwen2p5vl7b_hidden_hunyuanvideo/model.ckpt`
 
@@ -88,7 +103,7 @@ ComfyUI/
 1. Add `RunningHub Univideo Loader` node to load the pipeline
 2. Add `RunningHub Univideo Editor` node
 3. Connect a video input to the `ref_video` input
-4. (Optional) Connect a reference image to the `ref_image` input for face swapping
+4. (Optional) Connect a reference image to the `ref_image` input for identity swapping
 5. Enter your editing prompt
 6. Run the workflow
 
@@ -106,25 +121,28 @@ ComfyUI/
 
 ### Task Types
 
-- **v2v_edit**: Video-to-video editing without reference image
-  - Example prompt: "Change the man to look like he is sculpted from chocolate."
+- **v2v_edit** (Video-to-Video Editing): Edit video without reference image
+  - Example: `"Change the man to look like he is sculpted from chocolate."`
 
-- **i+v2v_edit**: In-context video editing with reference image
-  - Example prompt: "Use the person's face in the reference image to replace the person's face in the video."
+- **i+v2v_edit** (In-Context Video Editing): Edit video with reference image for identity transfer
+  - Example: `"Use the man's face in the reference image to replace the man's face in the video."`
 
 ## 💻 System Requirements
 
 - **GPU**: NVIDIA GPU with at least 24GB VRAM (recommended)
-- **CUDA**: 11.8 or higher
-- **Python**: 3.10+
-- **OS**: Windows, Linux, macOS
+- **CUDA**: 12.1 or higher (recommended)
+- **Python**: 3.11 (tested)
+- **PyTorch**: 2.4.1+ with CUDA support
+- **OS**: Windows, Linux
 
 ## 📝 Dependencies
 
-- torch >= 2.0.0
-- torchvision >= 0.15.0
-- transformers >= 4.40.0
-- diffusers >= 0.27.0
+Core dependencies (aligned with official UniVideo):
+
+- torch >= 2.4.1
+- torchvision
+- transformers >= 4.51.0
+- diffusers >= 0.34.0
 - optimum-quanto >= 0.2.0
 - decord >= 0.6.0
 - einops >= 0.7.0
@@ -134,10 +152,23 @@ ComfyUI/
 
 ## 🙏 Acknowledgements
 
-- [UniVideo](https://github.com/KlingTeam/UniVideo) - The original UniVideo framework by Kling Team
-- [HunyuanVideo](https://github.com/Tencent/HunyuanVideo) - Base video generation model
-- [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) - Multimodal language model
-- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - The amazing node-based UI
+- [UniVideo](https://github.com/KlingTeam/UniVideo) - The original UniVideo framework by Kling Team (Kuaishou Technology)
+- [HunyuanVideo](https://github.com/Tencent/HunyuanVideo) - Base video generation model by Tencent
+- [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) - Multimodal language model by Alibaba
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - The powerful node-based UI
+
+## 🌟 Citation
+
+If you use this project, please cite the original UniVideo paper:
+
+```bibtex
+@article{wei2025univideo,
+  title={UniVideo: Unified Understanding, Generation, and Editing for Videos},
+  author={Wei, Cong and Liu, Quande and Ye, Zixuan and Wang, Qiulin and Wang, Xintao and Wan, Pengfei and Gai, Kun and Chen, Wenhu},
+  journal={arXiv preprint arXiv:2510.08377},
+  year={2025}
+}
+```
 
 ## 📄 License
 

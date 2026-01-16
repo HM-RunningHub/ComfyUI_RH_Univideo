@@ -1,11 +1,14 @@
-torch>=2.0.0
-torchvision>=0.15.0
+# Core dependencies aligned with official UniVideo
+# https://github.com/KlingTeam/UniVideo
+
+torch>=2.4.1
+torchvision
 numpy>=1.24.0
 Pillow>=9.0.0
 PyYAML>=6.0
 opencv-python>=4.8.0
 decord>=0.6.0
 einops>=0.7.0
-transformers>=4.40.0
-diffusers>=0.27.0
+transformers>=4.51.0
+diffusers>=0.34.0
 optimum-quanto>=0.2.0
