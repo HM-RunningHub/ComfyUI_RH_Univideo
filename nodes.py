@@ -88,6 +88,8 @@ class RunningHub_Univideo_Loader:
             device_map=None 
         )
         vae.eval()
+        vae.enable_tiling()
+        vae.enable_slicing()
             
         # Load HunyuanVideo transformer and reinitialize connector.
         qwenvl_txt_dim = 3584
