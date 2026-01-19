@@ -369,8 +369,104 @@ class RunningHub_Univideo_Editor:
     def update(self):
         self.pbar.update(1)
 
+class RunningHub_Univideo_Editor_MultiID(RunningHub_Univideo_Editor):
+    
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "pipeline": ("RH_Univideo_Pipeline", ),
+                "prompt": ("STRING", {"default": "", \
+                    "multiline": True}),
+                "width": ("INT", {"default": 832, "min": 64, "max": 2048, "step": 8}),
+                "height": ("INT", {"default": 480, "min": 64, "max": 2048, "step": 8}),
+                "num_frames": ("INT", {"default": 81, "min": 1, 'step': 4}),
+                "sample_steps": ("INT", {"default": 20,}),
+                "fps": ("INT", {"default": 24,}),
+                "seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffffffffffff}),
+            },
+            "optional": {
+                "ref_image1": ("IMAGE", ),
+                "ref_image2": ("IMAGE", ),
+                "ref_image3": ("IMAGE", ),
+            }
+        }
+
+    def sample(self, **kwargs):
+        
+        negative_prompt="Bright tones, overexposed, oversharpening, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, walking backwards, computer-generated environment, weak dynamics, distorted and erratic motions, unstable framing and a disorganized composition."
+
+        pipeline = kwargs.get('pipeline')
+        width = kwargs.get('width')
+        height = kwargs.get('height')
+        num_frames = kwargs.get('num_frames')
+        sample_steps = kwargs.get('sample_steps')
+        seed = kwargs.get('seed') ^ (2 ** 32)
+        ref_image1 = kwargs.get('ref_image1', None)
+        ref_image2 = kwargs.get('ref_image2', None)
+        ref_image3 = kwargs.get('ref_image3', None)
+        ref_image_list = list(filter(lambda x: x is not None, [ref_image1, ref_image2, ref_image3]))
+        print(len(ref_image_list))
+        if len(ref_image_list) == 0:
+            raise ValueError("At least one reference image is required")
+        prompt = kwargs.get('prompt')
+        fps = kwargs.get('fps')
+
+        self.pbar = comfy.utils.ProgressBar(sample_steps)
+
+        task = 'multiid'
+        ref_images_pil_list = [[pad_image_pil_to_square(self.tensor_2_pil(p).convert("RGB")) for p in ref_image_list]]
+        pipeline_kwargs = dict(
+            prompts=[prompt],
+            negative_prompt=negative_prompt,
+            ref_images=ref_images_pil_list,
+            height=height,
+            width=width,
+            num_frames=num_frames,
+            num_inference_steps=sample_steps,
+            guidance_scale=5.0,
+            image_guidance_scale=3.0,
+            seed=seed,
+            timestep_shift=7.0,
+            task=task,
+            update_fn=self.update,
+        )
+        output_filename = f"univideo_{uuid.uuid4()}.mp4"
+        output_path = os.path.join(folder_paths.get_output_directory(), output_filename)
+
+        output = pipeline(**pipeline_kwargs)
+
+        # text output
+        if hasattr(output, "text") and output.text is not None:
+            for i, text in enumerate(output.text):
+                print(f"Output {i}:\n{repr(text)}")
+        # image / video output
+        elif hasattr(output, "frames"):
+            output = output.frames[0]   # (F, H, W, C)
+            print(f"data.shape: {output.shape}, type: {type(output)}")
+            print(f"min: {output.min()}, max: {output.max()}, dtype: {output.dtype}")
+
+            if hasattr(output, "detach"):
+                output = output.detach().cpu().float().numpy()
+            F, H, W, C = output.shape
+            assert C == 3, f"Expected RGB, got C={C}"
+            # ---------- image ----------
+            if F == 1:
+                img = output[0]  # (H, W, C)
+                # normalize if needed
+                if img.min() < 0:
+                    img = (img + 1.0) / 2.0
+                img = (img * 255).clip(0, 255).astype(np.uint8)
+                Image.fromarray(img).save(output_path)
+            # ---------- video ----------
+            else:
+                export_to_video(output, output_path, fps=fps)
+        else:
+            raise ValueError(f"Unsupported pipeline output type: {type(output)}")
+        return (self.create_video_object(output_path), )
+
 NODE_CLASS_MAPPINGS = {
     "RunningHub Univideo Loader": RunningHub_Univideo_Loader,
     "RunningHub Univideo Editor": RunningHub_Univideo_Editor,
-    # "RunningHub_DreamID_V_Test": RunningHub_DreamID_V_Sampler_Test,
+    "RunningHub Univideo Generator(MultiID)": RunningHub_Univideo_Editor_MultiID,
 }
